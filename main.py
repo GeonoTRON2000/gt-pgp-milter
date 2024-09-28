@@ -58,7 +58,9 @@ class PGPMilter(Milter.Base):
 
     self.replace_headers(msg, enc_msg)
     # TODO: this is sketch
-    self.replacebody(enc_msg.as_bytes().split(b"\n\n")[1])
+    enc_bytes = enc_msg.as_bytes()
+    enc_body = enc_bytes[enc_bytes.find(b"\n\n")+2:]
+    self.replacebody(enc_body)
 
     return Milter.ACCEPT
     
