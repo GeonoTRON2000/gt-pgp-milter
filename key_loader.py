@@ -1,8 +1,8 @@
 import config
 import mysql.connector as mysql
-import pgpy.PGPKey as pgpkey
+import pgpy
 
-def load_keys(addrs: list[str]) -> list[pgpkey]:
+def load_keys(addrs: list[str]) -> list[pgpy.PGPKey]:
   if len(addrs) < 1:
     return []
   try:
@@ -28,7 +28,7 @@ def load_keys(addrs: list[str]) -> list[pgpkey]:
     
     keys = {}
     for (keyfpr, keydata) in stmt:
-      key = pgpkey()
+      key = pgpy.PGPKey()
       try:
         key.parse(keydata)
       except:
