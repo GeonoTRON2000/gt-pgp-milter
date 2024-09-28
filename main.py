@@ -59,11 +59,14 @@ class PGPMilter(Milter.Base):
     self.replace_headers(msg, enc_msg)
     # TODO: this is sketch
     self.replacebody(enc_msg.as_bytes().split(b"\n\n")[1])
+
+    return Milter.ACCEPT
     
   def close(self):
     self.recipients = []
     self.headers = []
     self.fp.close()
+    return Milter.CONTINUE
 
   def replace_headers(self, msg, enc_msg):
     for (k, v) in msg.items():
