@@ -1,3 +1,4 @@
+socket = "/var/spool/postfix/gt-pgp-milter/gt-pgp-milter.sock"
 db_config = {
   "host": "localhost",
   "user": "mysql_user",

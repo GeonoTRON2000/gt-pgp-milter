@@ -1,10 +1,9 @@
 # https://github.com/ulif/pgp-milter/blob/master/src/pgp_milter/pgp.py
+import config
 import pgp
 import Milter
 import email
 from io import BytesIO
-
-SOCKET="/var/spool/postfix/pgp-milter/pgp-milter.sock"
 
 class PGPMilter(Milter.Base):
   def __init__(self):
@@ -76,7 +75,7 @@ class PGPMilter(Milter.Base):
 def main():
   Milter.factory = PGPMilter
   Milter.set_flags(Milter.ADDHDRS + Milter.CHGHDRS + Milter.CHGBODY)
-  Milter.runmilter("gt-pgp-milter", SOCKET)
+  Milter.runmilter("gt-pgp-milter", config.socket)
 
 if __name__ == '__main__':
   main()
