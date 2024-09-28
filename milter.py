@@ -77,3 +77,6 @@ def main():
   Milter.factory = PGPMilter
   Milter.set_flags(Milter.ADDHDRS + Milter.CHGHDRS + Milter.CHGBODY)
   Milter.runmilter("gt-pgp-milter", SOCKET)
+
+if __name__ == '__main__':
+  main()
