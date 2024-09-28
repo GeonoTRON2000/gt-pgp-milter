@@ -1,0 +1,6 @@
+db_config = {
+  "host": "localhost",
+  "user": "mysql_user",
+  "password": "super fucking secure",
+  "database": "elite_database_name"
+}
