@@ -47,6 +47,9 @@ class PGPMilter(Milter.Base):
     if not encrypted:
       return Milter.ACCEPT
 
+    # `Content-Transfer-Encoding: quoted-printable`
+    # can prevent the message from being decrypted by clients 
+    self.set_header(msg, "Content-Transfer-Encoding", "")
     for (k, v) in enc_msg.items():
       self.set_header(msg, k, v)
 
