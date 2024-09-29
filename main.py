@@ -57,14 +57,12 @@ class PGPMilter(Milter.Base):
     return Milter.ACCEPT
 
   def close(self):
-    self.recipients = []
-    self.headers = []
-    self.fp.close()
+    self.__init__()
     return Milter.CONTINUE
 
   def set_header(self, old_msg, k, v):
     if k in old_msg.keys():
-      for i in rnage(len(msg.get_all(k))-1, -1, -1):
+      for i in range(len(msg.get_all(k))-1, -1, -1):
         self.chgheader(k, i, '')
     self.addheader(k, v)
 
