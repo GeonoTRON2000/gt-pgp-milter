@@ -11,7 +11,7 @@ from string import ascii_letters, digits
 
 protected_headers = ["to", "cc", "from", "reply-to", "followup-to", "subject", "date",\
                      "message-id"]
-structural_headers = ["content-type", "content-transfer-encoding"]
+structural_headers = ["content-type"]
 overzealous_headers = ["mime-version", "content-transfer-encoding"]
 
 def encrypt(mime_msg: EmailMessage, recipients: list[str]):
