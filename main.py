@@ -41,6 +41,9 @@ class PGPMilter(Milter.Base):
     raw_headers = b"\n".join(map(lambda header : b"%s: %s" % header, self.headers))
     msg = email.message_from_bytes(raw_headers + b"\n\n" + self.content, policy=email.policy.default)
 
+    # no `Received:` header indicates outbound mail
+    if msg.get("received") == None:
+      return Milter.ACCEPT
     if pgp.already_encrypted(msg):
       return Milter.ACCEPT
     enc_msg, encrypted = pgp.encrypt(msg, self.recipients)
