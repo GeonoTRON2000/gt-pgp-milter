@@ -30,11 +30,9 @@ class PGPMilter(Milter.Base):
     self.headers.append((k.encode(), v.encode()))
     return Milter.CONTINUE
 
-  @Milter.noreply # or nah
   def eoh(self):
     return Milter.CONTINUE
 
-  @Milter.noreply # or nah
   def body(self, chunk):
     self.content += chunk
     return Milter.CONTINUE
@@ -58,7 +56,6 @@ class PGPMilter(Milter.Base):
 
     return Milter.ACCEPT
 
-  @Milter.noreply # or nah
   def close(self):
     self.recipients = []
     self.headers = []
