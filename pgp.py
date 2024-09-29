@@ -60,6 +60,7 @@ def already_encrypted(mime_msg: EmailMessage) -> bool:
 
 def wrap_body(msg: EmailMessage) -> EmailMessage:
   wrapped_msg = MIMEMultipart("mixed", protected_headers="v1")
+  strip_extraneous_headers(wrapped_msg)
   content_type = "text/plain"
   for (header, value) in msg.items():
     l_header = header.lower()
