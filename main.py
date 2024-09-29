@@ -62,7 +62,7 @@ class PGPMilter(Milter.Base):
 
   def set_header(self, old_msg, k, v):
     if k in old_msg.keys():
-      for i in range(len(msg.get_all(k))-1, -1, -1):
+      for i in range(len(old_msg.get_all(k))-1, -1, -1):
         self.chgheader(k, i, '')
     self.addheader(k, v)
 
