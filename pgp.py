@@ -9,7 +9,7 @@ from copy import deepcopy
 from base64 import b64encode as base64_encode
 
 protected_headers = ["to", "cc", "from", "reply-to", "followup-to", "subject", "date", "message-id"]
-strip_headers = ["mime-version", "content-transfer-encoding"]
+overzealous_headers = ["mime-version", "content-transfer-encoding"]
 
 def encrypt(mime_msg: EmailMessage, recipients: list[str]):
   payload = wrap_body(deepcopy(mime_msg))
@@ -73,12 +73,13 @@ def wrap_body(msg: EmailMessage) -> EmailMessage:
     wrapped_msg.set_payload(msg.get_payload(decode=False))
   else:
     encoded_msg = MIMEText(base64_encode(payload), _charset="UTF-8")
+    strip_extraneous_headers(encoded_msg, ["content-type", "content-transfer-encoding", "mime-version"])
     encoded_msg["Content-Type"] = content_type
     encoded_msg["Content-Transfer-Encoding"] = "base64"
     wrapped_msg.attach(encoded_msg)
   return wrapped_msg
 
-def strip_extraneous_headers(msg: EmailMessage) -> None:
+def strip_extraneous_headers(msg: EmailMessage, strip_headers=overzealous_headers) -> None:
   for header in msg.keys():
     if header.lower() in strip_headers:
       del msg[header]
