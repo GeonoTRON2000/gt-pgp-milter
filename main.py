@@ -47,7 +47,7 @@ class PGPMilter(Milter.Base):
     if not encrypted:
       return Milter.ACCEPT
 
-    self.set_header('content-transfer-encoding', '')
+    self.set_header(msg, "content-transfer-encoding", "")
     for (k, v) in enc_msg.items():
       self.set_header(msg, k, v)
 
