@@ -10,7 +10,8 @@ from random import choices as alphabet_random
 from string import ascii_letters, digits
 
 protected_headers = ["to", "cc", "from", "reply-to", "followup-to", "subject", "date",\
-                     "message-id", "content-type", "content-transfer-encoding"]
+                     "message-id"]
+structural_headers = ["content-type", "content-transfer-encoding"]
 overzealous_headers = ["mime-version", "content-transfer-encoding"]
 
 def encrypt(mime_msg: EmailMessage, recipients: list[str]):
@@ -64,12 +65,28 @@ def already_encrypted(mime_msg: EmailMessage) -> bool:
 def wrap_body(msg: EmailMessage) -> EmailMessage:
   wrapped_msg = MIMEMultipart("mixed", boundary=gen_boundary(), protected_headers="v1")
   strip_extraneous_headers(wrapped_msg)
+
+  copy_headers(msg, wrapped_msg, protected_headers)
   for (header, value) in msg.items():
     if header.lower() in protected_headers:
       wrapped_msg.add_header(header, value)
 
-  wrapped_msg.set_payload(msg.get_payload(decode=False))
+  if msg.is_multipart():
+    strip_extraneous_headers(wrapped_msg, structural_headers)
+    copy_headers(msg, wrapped_msg, structural_headers)
+    wrapped_msg.set_payload(msg.get_payload(decode=False))
+  else:
+    text_holder = MIMEText(msg.get_payload(decode=True), _charset="utf-8")
+    strip_extraneous_headers(text_holder, structural_headers)
+    copy_headers(msg, text_holder, structural_headers)
+    wrapped_msg.attach(text_holder)
+
   return wrapped_msg
+
+def copy_headers(orig_msg: EmailMessage, container: EmailMessage, headers: list) -> None:
+  for (header, value) in orig_msg.items():
+    if header.lower() in headers:
+      container.add_header(header, value)
 
 def strip_extraneous_headers(msg: EmailMessage, strip_headers=overzealous_headers) -> None:
   for header in msg.keys():
