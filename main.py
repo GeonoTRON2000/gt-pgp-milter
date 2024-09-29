@@ -47,7 +47,6 @@ class PGPMilter(Milter.Base):
     if not encrypted:
       return Milter.ACCEPT
 
-    self.set_header(msg, "content-transfer-encoding", "")
     for (k, v) in enc_msg.items():
       self.set_header(msg, k, v)
 
@@ -62,9 +61,10 @@ class PGPMilter(Milter.Base):
     return Milter.CONTINUE
 
   def set_header(self, old_msg, k, v):
-    if k in old_msg.keys():
-      for i in range(len(old_msg.get_all(k))-1, -1, -1):
-        self.chgheader(k, i, '')
+    old_headers = old_msg.get_all(k)
+    if old_headers != None:
+      for i in range(len(old_headers)-1, -1, -1):
+        self.chgheader(k, i, "")
     if v != None and len(v) > 0:
       self.addheader(k, v)
 

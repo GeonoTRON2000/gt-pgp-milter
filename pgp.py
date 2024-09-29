@@ -49,7 +49,7 @@ def encrypt(mime_msg: EmailMessage, recipients: list[str]):
   strip_extraneous_headers(part2)
   container.attach(part1)
   container.attach(part2)
-  strip_extraneous_headers(container)
+  strip_extraneous_headers(container, ["mime-version"])
   return container, True
 
 def already_encrypted(mime_msg: EmailMessage) -> bool:
