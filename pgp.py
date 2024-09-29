@@ -7,6 +7,8 @@ from email.mime.application import MIMEApplication
 from email.mime.text import MIMEText
 from copy import deepcopy
 from base64 import b64encode as base64_encode
+from random import choices as alphabet_random
+from string import ascii_letters, digits
 
 protected_headers = ["to", "cc", "from", "reply-to", "followup-to", "subject", "date", "message-id"]
 overzealous_headers = ["mime-version", "content-transfer-encoding"]
@@ -24,6 +26,7 @@ def encrypt(mime_msg: EmailMessage, recipients: list[str]):
 
   container = MIMEMultipart(
     "encrypted",
+    boundary=gen_boundary(),
     protocol="application/pgp-encrypted"
   )
   container.preamble = "This is an OpenPGP/MIME encrypted message (RFC 4880 and 3156)"
@@ -59,7 +62,7 @@ def already_encrypted(mime_msg: EmailMessage) -> bool:
   return False
 
 def wrap_body(msg: EmailMessage) -> EmailMessage:
-  wrapped_msg = MIMEMultipart("mixed", protected_headers="v1")
+  wrapped_msg = MIMEMultipart("mixed", boundary=gen_boundary(), protected_headers="v1")
   strip_extraneous_headers(wrapped_msg)
   content_type = "text/plain"
   for (header, value) in msg.items():
@@ -84,6 +87,9 @@ def strip_extraneous_headers(msg: EmailMessage, strip_headers=overzealous_header
   for header in msg.keys():
     if header.lower() in strip_headers:
       del msg[header]
+
+def gen_boundary():
+  return "-" * 12 + ''.join(alphabet_random(ascii_letters + digits, k=24))
 
 def load_keys(recipients: list[str]) -> list[pgpy.PGPKey]:
   addrs = []
