@@ -6,7 +6,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from email.mime.text import MIMEText
 from copy import deepcopy
-from base64 import b64encode as base64_encode
 from random import choices as alphabet_random
 from string import ascii_letters, digits
 
@@ -76,10 +75,8 @@ def wrap_body(msg: EmailMessage) -> EmailMessage:
   if payload == None:
     wrapped_msg.set_payload(msg.get_payload(decode=False))
   else:
-    encoded_msg = MIMEText(base64_encode(payload), _charset="UTF-8")
-    strip_extraneous_headers(encoded_msg, ["content-type", "content-transfer-encoding", "mime-version"])
-    encoded_msg["Content-Type"] = content_type
-    encoded_msg["Content-Transfer-Encoding"] = "base64"
+    encoded_msg = MIMEText(payload, _charset="UTF-8")
+    strip_extraneous_headers(encoded_msg, ["mime-version"])
     wrapped_msg.attach(encoded_msg)
   return wrapped_msg
 
