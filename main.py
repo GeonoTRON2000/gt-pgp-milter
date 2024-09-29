@@ -3,13 +3,12 @@ import config
 import pgp
 import Milter
 import email
-from io import BytesIO
 
 class PGPMilter(Milter.Base):
   def __init__(self):
     self.recipients = []
     self.headers = []
-    self.fp = None
+    self.content = bytes()
 
   @Milter.noreply
   def connect(_self, _ip_name, _family, _hostaddr):
@@ -17,12 +16,8 @@ class PGPMilter(Milter.Base):
 
   @Milter.noreply
   def envfrom(self, name, *esmtp_params):
-    if self.fp:
-      self.fp.close()
-
-    self.fp = BytesIO()
-    self.recipients = []
-    self.headers = []
+    self.__init__()
+    # TODO: based on name determine if mail is outgoing and ignore
     return Milter.CONTINUE
 
   @Milter.noreply
@@ -31,24 +26,22 @@ class PGPMilter(Milter.Base):
     return Milter.CONTINUE
 
   @Milter.noreply
-  def header(self, k, v):
-    self.headers.append((k, v))
-    self.fp.write(("%s: %s\n" % (k, v)).encode())
+  def header(self, k: str, v: str):
+    self.headers.append((k.encode(), v.encode()))
     return Milter.CONTINUE
 
-  #@Milter.noreply
+  @Milter.noreply # or nah
   def eoh(self):
-    self.fp.write(b"\n")
     return Milter.CONTINUE
 
-  #@Milter.noreply
+  @Milter.noreply # or nah
   def body(self, chunk):
-    self.fp.write(chunk)
+    self.content += chunk
     return Milter.CONTINUE
 
   def eom(self):
-    self.fp.seek(0)
-    msg = email.message_from_binary_file(self.fp, policy=email.policy.default)
+    raw_headers = b"\n".join(map(lambda header : b"%s: %s" % header, self.headers))
+    msg = email.message_from_bytes(raw_headers + b"\n\n" + self.content, policy=email.policy.default)
 
     if pgp.already_encrypted(msg):
       return Milter.ACCEPT
@@ -56,26 +49,27 @@ class PGPMilter(Milter.Base):
     if not encrypted:
       return Milter.ACCEPT
 
-    self.replace_headers(msg, enc_msg)
-    # TODO: this is sketch
+    for (k, v) in enc_msg.items():
+      self.set_header(msg, k, v)
+
     enc_bytes = enc_msg.as_bytes()
     enc_body = enc_bytes[enc_bytes.find(b"\n\n")+2:]
     self.replacebody(enc_body)
 
     return Milter.ACCEPT
-    
+
+  @Milter.noreply # or nah
   def close(self):
     self.recipients = []
     self.headers = []
     self.fp.close()
     return Milter.CONTINUE
 
-  def replace_headers(self, msg, enc_msg):
-    for (k, v) in msg.items():
-      for i in range(len(msg.get_all(k))-1, -1, -1):
+  def set_header(self, old_msg, k, v):
+    if k in old_msg.keys():
+      for i in rnage(len(msg.get_all(k))-1, -1, -1):
         self.chgheader(k, i, '')
-    for (k, v) in enc_msg.items():
-      self.addheader(k, v)
+    self.addheader(k, v)
 
 def main():
   Milter.factory = PGPMilter
