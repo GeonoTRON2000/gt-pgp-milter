@@ -4,13 +4,15 @@ import email
 from email.message import EmailMessage
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+from email.mime.text import MIMEText
 from copy import deepcopy
+from base64 import encode as base64_encode
 
-keep_headers = []
+protected_headers = ["to", "cc", "from", "reply-to", "followup-to", "subject", "date", "message-id"]
 strip_headers = ["mime-version", "content-transfer-encoding"]
 
 def encrypt(mime_msg: EmailMessage, recipients: list[str]):
-  payload = extract_body(deepcopy(mime_msg))
+  payload = wrap_body(deepcopy(mime_msg))
 
   rcpt_keys = load_keys(recipients)
   if len(rcpt_keys) < 1:
@@ -56,10 +58,25 @@ def already_encrypted(mime_msg: EmailMessage) -> bool:
       return True
   return False
 
-def extract_body(msg: EmailMessage) -> EmailMessage:
-  for header in msg.keys():
-      del msg[header]
-  return msg
+def wrap_body(msg: EmailMessage) -> EmailMessage:
+  wrapped_msg = MIMEMultipart("mixed", protected_headers="v1")
+  content_type = "text/plain"
+  for (header, value) in msg.items():
+    l_header = header.lower()
+    if l_header == "content-type":
+      content_type = value
+    if l_header in protected_headers:
+      wrapped_msg.add_header(header, value)
+
+  payload = msg.get_payload(decode=True)
+  if payload == None:
+    wrapped_msg.set_payload(msg.get_payload(decode=False))
+  else:
+    encoded_msg = MIMEText(base64_encode(payload))
+    encoded_msg["Content-Type"] = content_type
+    encoded_msg["Content-Transfer-Encoding"] = "base64"
+    wrapped_msg.attach(encoded_msg)
+  return wrapped_msg
 
 def strip_extraneous_headers(msg: EmailMessage) -> None:
   for header in msg.keys():
