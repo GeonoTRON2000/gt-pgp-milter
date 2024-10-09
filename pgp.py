@@ -22,8 +22,16 @@ def encrypt(mime_msg: EmailMessage, recipients: list[str]):
     return mime_msg, False
 
   enc_msg = pgpy.PGPMessage.new(payload.as_string())
+  encrypted = False
   for key in rcpt_keys:
-    enc_msg = key.encrypt(enc_msg)
+    try:
+      enc_msg = key.encrypt(enc_msg)
+      encrypted = True
+    except:
+      continue
+
+  if not encrypted:
+    return mime_msg, False
 
   container = MIMEMultipart(
     "encrypted",
